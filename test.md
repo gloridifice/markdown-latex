@@ -10,6 +10,8 @@
 
 段落结束。
 
+![test image](images/test.jpg)
+
 $$$hhhhh
 \frac{1}{2}\mu
 $$$

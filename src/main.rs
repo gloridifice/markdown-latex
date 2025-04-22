@@ -44,6 +44,9 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
     let parser = MdParser::new_ext(&preprocessed, Options::all());
 
     let replacements = build_replacement_table();
+    let mut inside_image = false;
+    let mut image_url = String::new();
+    let mut image_caption = String::new();
     let mut _inside_paragraph = false;
 
     for event in parser {
@@ -69,6 +72,9 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
                 _inside_paragraph = false;
                 output.push_str("\n\n"); // 两个换行表示段落结束
             }
+            Event::Text(text) if inside_image => {
+                image_caption.push_str(&text); // 累加文字，避免分段
+            }
             Event::Text(text) => {
                 output.push_str(&apply_text_replacements(&text, &replacements));
             }
@@ -80,6 +86,21 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
                 output.push_str(&format!("\\href{{{}}}{{", url));
             }
             Event::End(Tag::Link(_, _, _)) => output.push('}'),
+            Event::Start(Tag::Image(_, url, _)) => {
+                inside_image = true;
+                image_url = url.to_string();
+            }
+            Event::End(Tag::Image(_, _, _)) => {
+                output.push_str("\\begin{figure}[h]\n");
+                output.push_str(&format!("\\includegraphics{{{}}}\n", image_url));
+                output.push_str(&format!("\\caption{{{}}}\n", image_caption));
+                output.push_str(&format!("\\label{{fig:{}}}\n", image_url));
+                output.push_str("\\end{figure}\n");
+
+                inside_image = false;
+                image_url.clear();
+                image_caption.clear();
+            }
             Event::Code(code) => {
                 // 行内代码可映射为 \texttt{}
                 output.push_str(&format!("\\texttt{{{}}}", code));
