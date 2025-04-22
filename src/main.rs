@@ -127,14 +127,14 @@ fn replace_block_equations(input: &str) -> String {
 
     while let Some(line) = lines.next() {
         let trimmed = line.trim();
-        if trimmed.starts_with("$$$") {
+        if trimmed.starts_with("$$") {
             // 开始公式块
-            let label = trimmed.trim_start_matches("$$$").trim();
+            let label = trimmed.trim_start_matches("$$").trim();
             let mut content = String::new();
 
             // 收集中间内容
             while let Some(next_line) = lines.peek() {
-                if next_line.trim() == "$$$" {
+                if next_line.trim() == "$$" {
                     lines.next(); // consume closing
                     break;
                 } else {
