@@ -11,9 +11,9 @@ $ markdown-latex foo.md
 ```
 It will generate `foo.tex` in the same path.
 ```
-$ markdown-latex foo.md --output build/foo.tex
+$ markdown-latex foo.md build/foo.tex
 ```
-Use `--output <output_path>` to define the output path manually.
+Use second argument to define the output path manually.
 
 ## Supported Grammar
 
@@ -34,6 +34,6 @@ Use `--output <output_path>` to define the output path manually.
 | Bold               | `**<foo>**`            | `\textbf{<foo>}`                                                                                 |                         |
 | Italic             | `*<foo>*`              | `\textit{<foo>}`                                                                                 |                         |
 
-## Example 
+## Example
 
 See `test.md` and `test.tex`.
