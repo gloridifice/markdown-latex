@@ -182,6 +182,16 @@ fn apply_text_replacements(text: &str, table: &HashMap<&str, &str>) -> String {
     // 对类似 [text](url) 的 Markdown 链接用正则替换为 \href{url}{text}
     let re = Regex::new(r"\[([^\]]+)\]\(([^)]+)\)").unwrap();
     replaced = re.replace_all(&replaced, "\\href{$2}{$1}").to_string();
+    let replaced = replaced
+        .replace('\\', "\\textbackslash{}")
+        .replace('&', "\\&")
+        .replace('%', "\\%")
+        .replace('#', "\\#")
+        .replace('_', "\\_")
+        .replace('{', "\\{")
+        .replace('}', "\\}")
+        .replace('~', "\\textasciitilde{}")
+        .replace('^', "\\textasciicircum{}");
 
     replaced
 }
