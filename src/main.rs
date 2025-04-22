@@ -1,6 +1,5 @@
 use clap::Parser;
 use pulldown_cmark::{Event, HeadingLevel, Options, Parser as MdParser, Tag};
-use regex::Regex;
 use std::{collections::HashMap, path::Path, sync::LazyLock};
 
 static PRE_REPLACEMENT_TABLE: LazyLock<HashMap<&'static str, &'static str>> =
