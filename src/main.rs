@@ -1,7 +1,13 @@
 use clap::Parser;
 use pulldown_cmark::{Event, HeadingLevel, Options, Parser as MdParser, Tag};
 use regex::Regex;
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, sync::LazyLock};
+
+static PRE_REPLACEMENT_TABLE: LazyLock<HashMap<&'static str, &'static str>> =
+    LazyLock::new(|| HashMap::from([("[`", "\\cite{"), ("`]", "}"), ("{", "\\{"), ("}", "\\}")]));
+
+static IN_TEXT_REPLACEMENT_TABLE: LazyLock<HashMap<&'static str, &'static str>> =
+    LazyLock::new(|| HashMap::from([("&", "\\&"), ("%", "\\%"), ("_", "\\_"), ("#", "\\#")]));
 
 /// 将 Markdown 文件中的内容转换为 LaTeX（支持语法映射与公式块）
 #[derive(Parser, Debug)]
@@ -43,7 +49,6 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
     let mut output = String::new();
     let parser = MdParser::new_ext(&preprocessed, Options::all());
 
-    let replacements = build_replacement_table();
     let mut inside_image = false;
     let mut image_url = String::new();
     let mut image_caption = String::new();
@@ -78,7 +83,7 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
                 image_caption.push_str(&text); // 累加文字，避免分段
             }
             Event::Text(text) => {
-                output.push_str(&apply_text_replacements(&text, &replacements));
+                output.push_str(&apply_text_replacements(&text, &IN_TEXT_REPLACEMENT_TABLE));
             }
             Event::Start(Tag::Emphasis) => output.push_str("\\textit{"),
             Event::End(Tag::Emphasis) => output.push('}'),
@@ -146,6 +151,7 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
 }
 
 fn replace_block_equations(input: &str) -> String {
+    let input = apply_text_replacements(input, &PRE_REPLACEMENT_TABLE);
     let mut output = String::new();
     let mut lines = input.lines().peekable();
 
@@ -180,42 +186,11 @@ fn replace_block_equations(input: &str) -> String {
     output
 }
 
-/// 映射表构建（来源于 PDF 表格）
-fn build_replacement_table() -> HashMap<&'static str, &'static str> {
-    HashMap::from([
-        // 文本模式替换
-        ("**", "\\textbf{"),
-        ("*", "\\textit{"),
-        ("[`", "\\cite{"),
-        ("`]", "}"),
-        // 语法结构替换（部分会被前面代码覆盖）
-        ("$", "$"), // 保持公式不变
-                    // 块级公式、图片等可另外处理
-    ])
-}
-
 /// 对纯文本做替换
 fn apply_text_replacements(text: &str, table: &HashMap<&str, &str>) -> String {
     let mut replaced = text.to_string();
-
-    // 简单替换逻辑（这里可以加入 regex 做结构化处理）
     for (md, latex) in table {
         replaced = replaced.replace(md, latex);
     }
-
-    // 对类似 [text](url) 的 Markdown 链接用正则替换为 \href{url}{text}
-    let re = Regex::new(r"\[([^\]]+)\]\(([^)]+)\)").unwrap();
-    replaced = re.replace_all(&replaced, "\\href{$2}{$1}").to_string();
-    let replaced = replaced
-        .replace('\\', "\\textbackslash{}")
-        .replace('&', "\\&")
-        .replace('%', "\\%")
-        .replace('#', "\\#")
-        .replace('_', "\\_")
-        .replace('{', "\\{")
-        .replace('}', "\\}")
-        .replace('~', "\\textasciitilde{}")
-        .replace('^', "\\textasciicircum{}");
-
     replaced
 }
