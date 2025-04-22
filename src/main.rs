@@ -1,31 +1,38 @@
 use clap::Parser;
 use pulldown_cmark::{Event, HeadingLevel, Options, Parser as MdParser, Tag};
 use regex::Regex;
-use std::collections::HashMap;
-use std::fs::{File, read_to_string};
-use std::io::Write;
+use std::{collections::HashMap, path::Path};
 
-/// 命令行参数
+/// 将 Markdown 文件中的内容转换为 LaTeX（支持语法映射与公式块）
 #[derive(Parser, Debug)]
-#[command(about = "将 Markdown 内容转换为 LaTeX")]
-struct Args {
-    /// 输入的 Markdown 文件
-    #[arg(short, long)]
-    input: String,
+#[command(author, version, about)]
+pub struct Args {
+    /// 输入的 Markdown 文件路径
+    #[arg(value_name = "INPUT")]
+    pub input: String,
 
-    /// 输出的 LaTeX 文件
-    #[arg(short, long)]
-    output: String,
+    /// 输出的 LaTeX 文件路径（可选，默认替换 .md 为 .tex）
+    #[arg(value_name = "OUTPUT")]
+    pub output: Option<String>,
 }
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
-    let md_content = read_to_string(&args.input)?;
 
-    let converted = convert_markdown_to_latex(&md_content);
+    let input_path = args.input;
+    let output_path = args.output.unwrap_or_else(|| {
+        let path = Path::new(&input_path);
+        let stem = path.file_stem().unwrap_or_default().to_string_lossy();
+        let parent = path.parent().unwrap_or_else(|| Path::new(""));
+        parent
+            .join(format!("{stem}.tex"))
+            .to_string_lossy()
+            .into_owned()
+    });
 
-    let mut file = File::create(&args.output)?;
-    writeln!(file, "{}", converted)?;
+    let md_content = std::fs::read_to_string(&input_path)?;
+    let latex = convert_markdown_to_latex(&md_content);
+    std::fs::write(&output_path, latex)?;
 
     Ok(())
 }
