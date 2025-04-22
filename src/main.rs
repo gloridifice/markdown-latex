@@ -48,6 +48,8 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
     let mut image_url = String::new();
     let mut image_caption = String::new();
     let mut _inside_paragraph = false;
+    let mut _in_ordered_list = false;
+    let mut _in_unordered_list = false;
 
     for event in parser {
         match event {
@@ -100,6 +102,28 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
                 inside_image = false;
                 image_url.clear();
                 image_caption.clear();
+            }
+            Event::Start(Tag::List(Some(_))) => {
+                output.push_str("\\begin{enumerate}\n");
+                _in_ordered_list = true;
+            }
+            Event::Start(Tag::List(None)) => {
+                output.push_str("\\begin{itemize}\n");
+                _in_unordered_list = true;
+            }
+            Event::End(Tag::List(Some(_))) => {
+                output.push_str("\\end{enumerate}\n");
+                _in_ordered_list = false;
+            }
+            Event::End(Tag::List(None)) => {
+                output.push_str("\\end{itemize}\n");
+                _in_unordered_list = false;
+            }
+            Event::Start(Tag::Item) => {
+                output.push_str("\\item ");
+            }
+            Event::End(Tag::Item) => {
+                output.push('\n');
             }
             Event::Code(code) => {
                 // 行内代码可映射为 \texttt{}
