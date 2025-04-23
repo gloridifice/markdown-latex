@@ -131,7 +131,7 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
             }
             Event::Code(code) => {
                 // 行内代码可映射为 \texttt{}
-                output.push_str(&format!("\\texttt{{{}}}", code));
+                output.push_str(&format!("\\texttt{{{}}}", apply_text_replacements(&code, &IN_TEXT_REPLACEMENT_TABLE)));
             }
             Event::Rule => output.push_str("\\hrulefill\n"),
             Event::SoftBreak => {
