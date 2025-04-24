@@ -1,5 +1,5 @@
 use clap::Parser;
-use pulldown_cmark::{Event, HeadingLevel, Options, Parser as MdParser, Tag};
+use pulldown_cmark::{CodeBlockKind, CowStr, Event, HeadingLevel, Options, Parser as MdParser, Tag};
 use std::{collections::HashMap, path::Path, sync::LazyLock};
 
 static PRE_REPLACEMENT_TABLE: LazyLock<HashMap<&'static str, &'static str>> =
@@ -42,6 +42,14 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
+#[derive(PartialEq, Eq)]
+enum CustomCodeBlockKind<'a> {
+    NonCodeBlock,
+    Indent,
+    Fenced(CowStr<'a>),
+    RawLatex,
+}
+
 fn convert_markdown_to_latex(markdown: &str) -> String {
     let preprocessed = replace_block_equations(markdown);
 
@@ -54,6 +62,7 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
     let mut _inside_paragraph = false;
     let mut _in_ordered_list = false;
     let mut _in_unordered_list = false;
+    let mut codeblock_status = CustomCodeBlockKind::NonCodeBlock;
 
     for event in parser {
         match event {
@@ -80,6 +89,9 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
             }
             Event::Text(text) if inside_image => {
                 image_caption.push_str(&text); // 累加文字，避免分段
+            }
+            Event::Text(text) if codeblock_status != CustomCodeBlockKind::NonCodeBlock => {
+                output.push_str(&text);
             }
             Event::Text(text) => {
                 output.push_str(&apply_text_replacements(&text, &IN_TEXT_REPLACEMENT_TABLE));
@@ -129,6 +141,28 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
             Event::End(Tag::Item) => {
                 output.push('\n');
             }
+            Event::Start(Tag::CodeBlock(kind)) => {
+                if let CodeBlockKind::Fenced(lang) = kind {
+                    if *lang == *"latex raw" {
+                        codeblock_status = CustomCodeBlockKind::RawLatex;
+                    } else {
+                        codeblock_status = CustomCodeBlockKind::Fenced(lang);
+                    }
+                } else {
+                    codeblock_status = CustomCodeBlockKind::Indent;
+                }
+                
+                if codeblock_status != CustomCodeBlockKind::RawLatex {
+                    output.push_str("\\begin{lstlisting}\n");
+                }
+
+            }
+            Event::End(Tag::CodeBlock(_)) => {
+                if codeblock_status != CustomCodeBlockKind::RawLatex {
+                    output.push_str("\\end{lstlisting}\n");
+                }
+                codeblock_status = CustomCodeBlockKind::NonCodeBlock;
+            }
             Event::Code(code) => {
                 // 行内代码可映射为 \texttt{}
                 output.push_str(&format!("\\texttt{{{}}}", apply_text_replacements(&code, &IN_TEXT_REPLACEMENT_TABLE)));
@@ -150,7 +184,7 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
 }
 
 fn replace_block_equations(input: &str) -> String {
-    let input = apply_text_replacements(input, &PRE_REPLACEMENT_TABLE);
+    // let input = apply_text_replacements(input, &PRE_REPLACEMENT_TABLE);
     let mut output = String::new();
     let mut lines = input.lines().peekable();
 
@@ -167,17 +201,30 @@ fn replace_block_equations(input: &str) -> String {
                     lines.next(); // consume closing
                     break;
                 } else {
-                    content.push_str(lines.next().unwrap());
+                    content.push_str(&lines.next().unwrap());
                     content.push('\n');
                 }
             }
 
             output.push_str("\\begin{equation}\n");
-            output.push_str(&content);
+            output.push_str(&apply_text_replacements(&content, &PRE_REPLACEMENT_TABLE));
             output.push_str(&format!("\\label{{eq:{}}}\n", label));
             output.push_str("\\end{equation}\n\n");
-        } else {
+        } else if trimmed.starts_with("```latex raw") {
             output.push_str(line);
+            output.push('\n');
+            
+            while let Some(next_line) = lines.peek() {
+                if next_line.trim() == "```" {
+                    output.push_str(lines.next().unwrap());
+                    output.push('\n');
+                } else {
+                    output.push_str(lines.next().unwrap());
+                    output.push('\n');
+                }
+            }
+        } else {
+            output.push_str(&apply_text_replacements(&line, &PRE_REPLACEMENT_TABLE));
             output.push('\n');
         }
     }

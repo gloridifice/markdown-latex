@@ -25,3 +25,13 @@ C# 啊啊啊
 $$hhhhh
 \frac{1}{2}\mu
 $$
+
+```rust
+pub fn main() {
+    println!("hello, world");
+}
+```
+ 
+```latex raw
+\chapter{Raw Latex}
+```
