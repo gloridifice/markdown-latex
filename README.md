@@ -15,6 +15,19 @@ $ markdown-latex foo.md build/foo.tex
 ```
 Use second argument to define the output path manually.
 
+```
+$ markdown-latex --help
+```
+Use `--help` to get help message.
+
+### For macOS user
+
+If you are prompted that you cannot open the program when using binaries from GitHub release, try the following steps:
+1. Right-click on the app.
+2. Hold down the **Option** key and click *Open*.
+3. The app will run and exit immediately.
+Then you can use this app normally.
+
 ## Supported Grammar
 
 | Name               | Markdown               | Generated LaTeX                                                                                  | Tips                    |
