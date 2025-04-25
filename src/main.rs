@@ -64,8 +64,47 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
     let mut _in_unordered_list = false;
     let mut codeblock_status = CustomCodeBlockKind::NonCodeBlock;
 
+    let mut inside_table = false;
+    let mut _inside_header = false;
+    let mut current_row = String::new();
+    let mut first_cell = true;
+
     for event in parser {
         match event {
+            Event::Start(Tag::Table(_alignments)) => {
+                inside_table = true;
+                output.push_str("\\begin{tabular}{|c|c|c|} \\hline\n"); // TODO: 动态生成列格式
+            }
+            Event::End(Tag::Table(_)) => {
+                output.push_str("\\end{tabular}\n\n");
+                inside_table = false;
+            }
+            Event::Start(Tag::TableHead) => {
+                _inside_header = true;
+            }
+            Event::End(Tag::TableHead) => {
+                output.push_str(&current_row);
+                output.push_str(" \\\\ \\hline\n");
+                current_row.clear();
+            }
+            Event::Start(Tag::TableRow) => {
+                first_cell = true;
+            }
+            Event::End(Tag::TableRow) => {
+                output.push_str(&current_row);
+                output.push_str(" \\\\ \\hline\n");
+                current_row.clear();
+            }
+            Event::Start(Tag::TableCell) => {}
+            Event::End(Tag::TableCell) => {}
+            Event::Text(text) if inside_table => {
+                if !first_cell {
+                    current_row.push_str(" & ");
+                }
+                current_row.push_str(&apply_text_replacements(&text, &IN_TEXT_REPLACEMENT_TABLE));
+                first_cell = false;
+            }
+
             Event::Start(Tag::Heading(level, _, _)) => {
                 output.push_str("\\");
                 output.push_str(match level {
@@ -165,7 +204,10 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
             }
             Event::Code(code) => {
                 // 行内代码可映射为 \texttt{}
-                output.push_str(&format!("\\texttt{{{}}}", apply_text_replacements(&code, &IN_TEXT_REPLACEMENT_TABLE)));
+                output.push_str(&format!(
+                    "\\texttt{{{}}}",
+                    apply_text_replacements(&code, &IN_TEXT_REPLACEMENT_TABLE)
+                ));
             }
             Event::Rule => output.push_str("\\hrulefill\n"),
             Event::SoftBreak => {
