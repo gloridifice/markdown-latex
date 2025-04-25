@@ -30,22 +30,24 @@ Then you can use this app normally.
 
 ## Supported Grammar
 
-| Name               | Markdown               | Generated LaTeX                                                                                  | Tips                    |
-|--------------------|------------------------|--------------------------------------------------------------------------------------------------|-------------------------|
-| Chapter            | `#`                    | `\chapter{}`                                                                                     |                         |
-| Section            | `##`                   | `\section{}`                                                                                     |                         |
-| Subsection         | `###`                  | `\subsection{}`                                                                                  |                         |
-| Sub-subsection     | `####`                 | `\subsubsection{}`                                                                               |                         |
-| Sub-sub-subsection | `#####`                | `\paragraph{}`                                                                                   |                         |
-| Cite               | ``[`<foo>`]``          | `\cite{<foo>}`                                                                                   |                         |
-| Hyperlink          | `[<foo>](<bar>)`       | `\href{<bar>}{<foo>}`                                                                            |                         |
-| Unordered list     | `- <foo>`              | `\begin{itemize} \item <foo> \end{itemize}`                                                      |                         |
-| Ordered list       | `1. <foo>`             | `\begin{enumerate} \item <foo> \end{enumerate}`                                                  |                         |
-| Inline equation    | `$<foo>$`              | `$<foo>$`                                                                                        |                         |
-| Equation block     | `$$ <bar> <foo> $$`    | `\begin{equation} <foo> \label{eq:<bar>} \end{equation}`                                         | `amsmath` macro needed  |
-| Image              | `![<caption>](<path>)` | `\begin{figure}[h] \includegraphics{<path>} \caption{<caption>} \label{fig:<path>} \end{figure}` | `graphics` macro needed |
-| Bold               | `**<foo>**`            | `\textbf{<foo>}`                                                                                 |                         |
-| Italic             | `*<foo>*`              | `\textit{<foo>}`                                                                                 |                         |
+| Name               | Markdown               | Generated LaTeX                                              | Tips                      |
+| ------------------ | ---------------------- | ------------------------------------------------------------ | ------------------------- |
+| Chapter            | `#`                    | `\chapter{}`                                                 |                           |
+| Section            | `##`                   | `\section{}`                                                 |                           |
+| Subsection         | `###`                  | `\subsection{}`                                              |                           |
+| Sub-subsection     | `####`                 | `\subsubsection{}`                                           |                           |
+| Sub-sub-subsection | `#####`                | `\paragraph{}`                                               |                           |
+| Cite               | ``[`<foo>`]``          | `\cite{<foo>}`                                               |                           |
+| Hyperlink          | `[<foo>](<bar>)`       | `\href{<bar>}{<foo>}`                                        | `hyperref`package needed  |
+| Unordered list     | `- <foo>`              | `\begin{itemize} \item <foo> \end{itemize}`                  |                           |
+| Ordered list       | `1. <foo>`             | `\begin{enumerate} \item <foo> \end{enumerate}`              |                           |
+| Inline equation    | `$<foo>$`              | `$<foo>$`                                                    |                           |
+| Equation block     | `$$ <bar> <foo> $$`    | `\begin{equation} <foo> \label{eq:<bar>} \end{equation}`     | `amsmath` package needed  |
+| Image              | `![<caption>](<path>)` | `\begin{figure}[h] \includegraphics{<path>} \caption{<caption>} \label{fig:<path>} \end{figure}` | `graphicx` package needed |
+| Bold               | `**<foo>**`            | `\textbf{<foo>}`                                             |                           |
+| Italic             | `*<foo>*`              | `\textit{<foo>}`                                             |                           |
+| Table              | Markdown table         | `tabularx` table                                             | `tabularx` package needed |
+| Code block         | Markdown code block    | `listings` code block                                        | `listings`package needed  |
 
 ## Example
 
