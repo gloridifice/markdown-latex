@@ -79,6 +79,9 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
     let mut _inside_header = false;
     let mut first_cell = true;
 
+    let mut is_add_heading_to_contents = false;
+    let mut heading_content_string: Option<String> = None;
+
     for event in parser {
         match event {
             Event::Start(Tag::Table(alignments)) => {
@@ -125,18 +128,38 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
             }
             Event::End(Tag::TableCell) => {}
 
-            Event::Start(Tag::Heading(level, _, _)) => {
+            Event::Start(Tag::Heading(level, _, classes)) => {
                 output.push_str("\\");
-                output.push_str(match level {
-                    HeadingLevel::H1 => "chapter{",
-                    HeadingLevel::H2 => "section{",
-                    HeadingLevel::H3 => "subsection{",
-                    HeadingLevel::H4 => "subsubsection{",
-                    HeadingLevel::H5 => "paragraph{",
-                    _ => "textbf{",
-                });
+                let mut base_string = match level {
+                    HeadingLevel::H1 => "chapter",
+                    HeadingLevel::H2 => "section",
+                    HeadingLevel::H3 => "subsection",
+                    HeadingLevel::H4 => "subsubsection",
+                    HeadingLevel::H5 => "paragraph",
+                    _ => "textbf",
+                }
+                .to_string();
+                if classes.contains(&"unnumbered") {
+                    base_string.push_str("*");
+                }
+                if classes.contains(&"add-contents") {
+                    is_add_heading_to_contents = true;
+                }
+                base_string.push_str("{");
+                output.push_str(&base_string);
             }
-            Event::End(Tag::Heading(_, _, _)) => output.push_str("}\n"),
+            Event::End(Tag::Heading(_, _, _)) => {
+                output.push_str("}\n");
+                if is_add_heading_to_contents {
+                    output.push_str(&format!(
+                        "\\addcontentsline{{toc}}{{chapter}}{{{}}}\n",
+                        heading_content_string.as_ref().unwrap()
+                    ));
+                    is_add_heading_to_contents = false;
+                    heading_content_string = None;
+                }
+                output.push_str("\n");
+            }
             Event::Start(Tag::Paragraph) => {
                 _inside_paragraph = true;
                 // 可选：插入 \par 或开头标记
@@ -153,7 +176,11 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
                 output.push_str(&text);
             }
             Event::Text(text) => {
-                output.push_str(&apply_text_replacements(&text, &IN_TEXT_REPLACEMENT_TABLE));
+                let replaced = apply_text_replacements(&text, &IN_TEXT_REPLACEMENT_TABLE);
+                if is_add_heading_to_contents {
+                    heading_content_string = Some(replaced.clone())
+                }
+                output.push_str(&replaced);
             }
             Event::Start(Tag::Emphasis) => output.push_str("\\textit{"),
             Event::End(Tag::Emphasis) => output.push('}'),
@@ -327,7 +354,7 @@ fn handle_code_block_start<'a>(
         if tags.contains(&"latex") && tags.contains(&"raw") {
             CustomCodeBlockKind::RawLatex
         } else {
-            output.push_str("\\begin{lstlisting}\n\n");
+            output.push_str("\\begin{lstlisting}\n");
             CustomCodeBlockKind::Code(Some(lang.clone()))
         }
     } else {

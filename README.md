@@ -49,6 +49,14 @@ Then you can use this app normally.
 | Table              | Markdown table         | `tabularx` table                                             | `tabularx` package needed |
 | Code block         | Markdown code block    | `listings` code block                                        | `listings`package needed  |
 
+### Heading classes
+
+You can use markdown heading class `.unnumbered` to make a heading unnumbered. It won't be in contents if a heading is unnumbered. Use `.add-contents` to add the heading to contents manually.
+
+```markdown
+### This is a unnumbered heading {.unnumbered .add-contents}
+```
+
 ## Example
 
-See `test.md` and `test.tex`.
+See `file_test/test.md` and `file_test/test.tex`.
