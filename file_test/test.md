@@ -6,7 +6,7 @@
 
 这里是一个链接：[Google](https://www.google.com)
 
-我们引用了一些文献[`foo`]，还有公式：$E = mc^2$
+我们引用了一些文献[`foo`]，还有公式：$E = mc^2 A_i = B_i$
 
 `Code { Rust }` 是正常的吗，`foo_bar` 呢？
 ``` cpp
@@ -28,8 +28,6 @@ bool foo = true;
 | 反射度     | reflectance        | f32 [0.0~1.0]            | 影响材质的高光强度的参数，参与微表面模型的计算     |
 | Alpha 模式 | alpha_mode         | 枚举：不透明、蒙板、混合 | 决定物体渲染方式的参数                             |
 
-
-
 C# 啊啊啊
 
 段落结束。
@@ -46,4 +44,8 @@ C# 啊啊啊
 
 $$ hhhhh
 \frac{1}{2}\mu
+$$
+
+$$
+NoTagEquation
 $$

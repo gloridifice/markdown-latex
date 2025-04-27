@@ -181,7 +181,7 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
                 let re = Regex::new(r"\$(.*?)\$").unwrap();
                 let result = re.replace_all(&replaced, |caps: &regex::Captures| {
                     let inner = &caps[1];
-                    let rp = apply_text_replacements(inner, &IN_TEXT_REPLACEMENT_TABLE);
+                    let rp = apply_text_replacements_inversedly(inner, &IN_TEXT_REPLACEMENT_TABLE);
                     format!("${}$", &rp)
                 });
 
@@ -361,7 +361,9 @@ fn handle_code_block_start<'a>(
             for caps in reg.captures_iter(tag) {
                 output.push_str("\\begin{equation}\n");
                 let name = &caps[1];
-                output.push_str(&format!("\\label{{eq:{}}}\n", name));
+                if !name.is_empty() {
+                    output.push_str(&format!("\\label{{eq:{}}}\n", name));
+                }
                 return CustomCodeBlockKind::Equation;
             }
         }
