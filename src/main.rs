@@ -177,10 +177,18 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
             }
             Event::Text(text) => {
                 let replaced = apply_text_replacements(&text, &IN_TEXT_REPLACEMENT_TABLE);
+
+                let re = Regex::new(r"\$(.*?)\$").unwrap();
+                let result = re.replace_all(&replaced, |caps: &regex::Captures| {
+                    let inner = &caps[1];
+                    let rp = apply_text_replacements(inner, &IN_TEXT_REPLACEMENT_TABLE);
+                    format!("${}$", &rp)
+                });
+
                 if is_add_heading_to_contents {
-                    heading_content_string = Some(replaced.clone())
+                    heading_content_string = Some(result.to_string())
                 }
-                output.push_str(&replaced);
+                output.push_str(&result);
             }
             Event::Start(Tag::Emphasis) => output.push_str("\\textit{"),
             Event::End(Tag::Emphasis) => output.push('}'),
@@ -329,6 +337,14 @@ fn apply_text_replacements(text: &str, table: &HashMap<&str, &str>) -> String {
     replaced
 }
 
+fn apply_text_replacements_inversedly(text: &str, table: &HashMap<&str, &str>) -> String {
+    let mut replaced = text.to_string();
+    for (md, latex) in table {
+        replaced = replaced.replace(latex, md);
+    }
+    replaced
+}
+
 fn handle_code_block_start<'a>(
     kind: CodeBlockKind<'a>,
     output: &mut String,
@@ -342,12 +358,10 @@ fn handle_code_block_start<'a>(
         for tag in tags.iter() {
             // Equation Matching
             let reg = Regex::new(r"block_equation\{(.*?)\}").unwrap();
-            let capture = reg.captures_iter(tag).collect::<Vec<_>>();
-            if !capture.is_empty() {
+            for caps in reg.captures_iter(tag) {
                 output.push_str("\\begin{equation}\n");
-                if let Some(label) = capture.get(1).and_then(|it| it.get(0)) {
-                    output.push_str(&format!("\\begin{{eq:{}}}", label.as_str()));
-                }
+                let name = &caps[1];
+                output.push_str(&format!("\\label{{eq:{}}}\n", name));
                 return CustomCodeBlockKind::Equation;
             }
         }
