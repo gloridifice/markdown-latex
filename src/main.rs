@@ -178,17 +178,10 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
             Event::Text(text) => {
                 let replaced = apply_text_replacements(&text, &IN_TEXT_REPLACEMENT_TABLE);
 
-                let re = Regex::new(r"\$(.*?)\$").unwrap();
-                let result = re.replace_all(&replaced, |caps: &regex::Captures| {
-                    let inner = &caps[1];
-                    let rp = apply_text_replacements_inversedly(inner, &IN_TEXT_REPLACEMENT_TABLE);
-                    format!("${}$", &rp)
-                });
-
                 if is_add_heading_to_contents {
-                    heading_content_string = Some(result.to_string())
+                    heading_content_string = Some(replaced.to_string())
                 }
-                output.push_str(&result);
+                output.push_str(&replaced);
             }
             Event::Start(Tag::Emphasis) => output.push_str("\\textit{"),
             Event::End(Tag::Emphasis) => output.push('}'),
@@ -381,5 +374,12 @@ fn handle_code_block_start<'a>(
 fn postprocess(input: &mut String) -> String {
     let re = Regex::new(r#"\\cite\\\{(.*?)\\\}"#).unwrap();
     let result = re.replace_all(input, r"\cite{$1}");
+
+    let re = Regex::new(r"\$([^\$\n]+)\$").unwrap();
+    let result = re.replace_all(&result, |caps: &regex::Captures| {
+        let inner = &caps[1];
+        let rp = apply_text_replacements_inversedly(inner, &IN_TEXT_REPLACEMENT_TABLE);
+        format!("${}$", &rp)
+    });
     result.to_string()
 }

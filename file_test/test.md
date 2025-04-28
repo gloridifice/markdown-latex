@@ -6,7 +6,7 @@
 
 这里是一个链接：[Google](https://www.google.com)
 
-我们引用了一些文献[`foo`]，还有公式：$E = mc^2 A_i = B_i$
+我们引用了一些文献[`foo`]，还有公式：$E = mc^2 A_i = B_i$, $f_{90}$
 
 `Code { Rust }` 是正常的吗，`foo_bar` 呢？
 ``` cpp
