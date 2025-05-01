@@ -3,10 +3,16 @@ use pulldown_cmark::{
     CodeBlockKind, CowStr, Event, HeadingLevel, Options, Parser as MdParser, Tag,
 };
 use regex::Regex;
-use std::{collections::HashMap, path::Path, sync::LazyLock};
+use std::{borrow::Cow, collections::HashMap, path::Path, sync::LazyLock};
 
-static PRE_REPLACEMENT_TABLE: LazyLock<HashMap<&'static str, &'static str>> =
-    LazyLock::new(|| HashMap::from([("[`", "\\cite{"), ("`]", "}")]));
+static PRE_REPLACEMENT_TABLE: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
+    HashMap::from([
+        ("[`", "\\cite{"),
+        ("`]", "}"),
+        ("[*", "\\ref{"),
+        ("*]", "}"),
+    ])
+});
 
 static IN_TEXT_REPLACEMENT_TABLE: LazyLock<HashMap<&'static str, &'static str>> =
     LazyLock::new(|| {
@@ -196,7 +202,7 @@ fn convert_markdown_to_latex(markdown: &str) -> String {
                 image_url = url.to_string();
             }
             Event::End(Tag::Image(_, _, _)) => {
-                output.push_str("\\begin{figure}[h]\n");
+                output.push_str("\\begin{figure}[htbp]\n");
                 output.push_str(&format!(
                     "\\centering\n\\includegraphics[width=0.8\\textwidth]{{{}}}\n",
                     image_url
@@ -296,7 +302,11 @@ fn preprocess(input: &str) -> String {
                 }
             }
 
-            output.push_str(&format!("``` block_equation{{{}}}\n", label));
+            if label.is_empty() {
+                output.push_str("``` block_equation{}\n");
+            } else {
+                output.push_str(&format!("``` block_equation{}\n", label));
+            }
             output.push_str(&content);
             output.push_str("```\n");
         } else if trimmed.starts_with("```latex raw") {
@@ -375,11 +385,25 @@ fn postprocess(input: &mut String) -> String {
     let re = Regex::new(r#"\\cite\\\{(.*?)\\\}"#).unwrap();
     let result = re.replace_all(input, r"\cite{$1}");
 
-    let re = Regex::new(r"\$([^\$\n]+)\$").unwrap();
-    let result = re.replace_all(&result, |caps: &regex::Captures| {
-        let inner = &caps[1];
-        let rp = apply_text_replacements_inversedly(inner, &IN_TEXT_REPLACEMENT_TABLE);
-        format!("${}$", &rp)
+    let re = Regex::new(r#"\\ref\\\{(.*?)\\\}"#).unwrap();
+    let result = re.replace_all(&result, r"\ref{$1}");
+
+    let result = inversedly_replace(&result, r"\$([^\$\n]+)\$", |it| format!("${}$", it));
+    let result = inversedly_replace(&result, r"\\ref\{([^}]+)\}", |it| {
+        format!("\\ref{{{}}}", it)
     });
     result.to_string()
+}
+
+fn inversedly_replace<'a>(
+    input: &'a str,
+    regex: &str,
+    formater: impl Fn(&str) -> String,
+) -> Cow<'a, str> {
+    let re = Regex::new(regex).unwrap();
+    re.replace_all(input, |caps: &regex::Captures| {
+        let inner = &caps[1];
+        let rp = apply_text_replacements_inversedly(inner, &IN_TEXT_REPLACEMENT_TABLE);
+        formater(&rp)
+    })
 }

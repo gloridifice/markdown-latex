@@ -8,6 +8,8 @@
 
 我们引用了一些文献[`foo`]，还有公式：$E = mc^2 A_i = B_i$, $f_{90}$
 
+这里则是一个资源引用测试[*fig:images/test_1.jpg*]
+
 `Code { Rust }` 是正常的吗，`foo_bar` 呢？
 ``` cpp
 bool foo = true;
@@ -40,9 +42,9 @@ C# 啊啊啊
 2. 有序列表是有序号的
 3. 有序列表是个列表
 
-![test image](images/test.jpg)
+![test image](images/test_1.jpg)
 
-$$ hhhhh
+$$ {eqlabel}
 \frac{1}{2}\mu
 $$
 
