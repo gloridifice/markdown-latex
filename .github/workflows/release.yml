@@ -46,6 +46,7 @@ jobs:
           # (optional) On which platform to distribute the `.tar.gz` file.
           # [default value: unix]
           # [possible values: all, unix, windows, none]
+          archive: $bin-$tag-$target
           tar: unix
           # (optional) On which platform to distribute the `.zip` file.
           # [default value: windows]
