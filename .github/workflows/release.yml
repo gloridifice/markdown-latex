@@ -47,6 +47,7 @@ jobs:
           # [default value: unix]
           # [possible values: all, unix, windows, none]
           archive: $bin-$tag-$target
+          include: LICENSE,README.md
           tar: unix
           # (optional) On which platform to distribute the `.zip` file.
           # [default value: windows]
