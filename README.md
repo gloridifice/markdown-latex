@@ -42,7 +42,7 @@ Then you can use this app normally.
 | Unordered list     | `- <foo>`              | `\begin{itemize} \item <foo> \end{itemize}`                  |                           |
 | Ordered list       | `1. <foo>`             | `\begin{enumerate} \item <foo> \end{enumerate}`              |                           |
 | Inline equation    | `$<foo>$`              | `$<foo>$`                                                    |                           |
-| Equation block     | `$$ <bar> <foo> $$`    | `\begin{equation} <foo> \label{eq:<bar>} \end{equation}`     | `amsmath` package needed  |
+| Equation block     | `$$ {<label>} <foo> $$`    | `\begin{equation} <foo> \label{eq:<label>} \end{equation}`     | `amsmath` package needed  |
 | Image              | `![<caption>](<path>)` | `\begin{figure}[h] \includegraphics{<path>} \caption{<caption>} \label{fig:<path>} \end{figure}` | `graphicx` package needed |
 | Bold               | `**<foo>**`            | `\textbf{<foo>}`                                             |                           |
 | Italic             | `*<foo>*`              | `\textit{<foo>}`                                             |                           |
